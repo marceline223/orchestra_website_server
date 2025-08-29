@@ -1,16 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Member } from './member.entity';
+import {Injectable, InternalServerErrorException} from '@nestjs/common';
+import {InjectRepository} from '@nestjs/typeorm';
+import {Repository} from 'typeorm';
+import {Member} from './member.entity';
 
 @Injectable()
 export class MemberService {
   constructor(
     @InjectRepository(Member)
     private memberRepository: Repository<Member>,
-  ) {}
+  ) {
+  }
 
-  findAll() {
+  findAll(): Promise<Member[]> {
     return this.memberRepository.find();
   }
 
@@ -19,18 +20,27 @@ export class MemberService {
       .createQueryBuilder('member')
       .leftJoinAndSelect('member.instruments', 'mi')
       .leftJoinAndSelect('mi.instrument', 'instrument')
-      .where('instrument.id = :instrumentId', { instrumentId })
+      .where('instrument.id = :instrumentId', {instrumentId})
       .orderBy('mi.order', 'ASC')
       .addOrderBy('member.lastName', 'ASC')
       .addOrderBy('member.firstName', 'ASC')
       .getMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} member`;
+  findOne(id: number): Promise<Member | null> {
+    return this.memberRepository.findOneBy({id});
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} member`;
+  remove(id: number): void {
+    this.findOne(id).then((member) => {
+      if (member) {
+        return this.memberRepository
+          .remove(member)
+          .catch((err) => {
+            throw new InternalServerErrorException(err.message);
+          });
+      }
+      return null;
+    });
   }
 }

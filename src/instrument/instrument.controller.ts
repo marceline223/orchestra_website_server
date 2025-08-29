@@ -11,12 +11,12 @@ export class InstrumentController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.instrumentService.findOne(+id);
+  findOne(@Param('id') id: number) {
+    return this.instrumentService.findOne(id);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.instrumentService.remove(+id);
+  remove(@Param('id') id: number) {
+    return this.instrumentService.remove(id);
   }
 }
